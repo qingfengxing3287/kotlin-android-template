@@ -1,43 +1,31 @@
 package com.ncorti.kotlin.template.app
-
+import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.view.View
-import androidx.appcompat.app.AppCompatActivity
-import com.ncorti.kotlin.template.app.databinding.ActivityMainBinding
-import com.ncorti.kotlin.template.library.FactorialCalculator
-import com.ncorti.kotlin.template.library.android.ToastUtil
+import android.widget.Toast
 
-class MainActivity : AppCompatActivity() {
-
-    private lateinit var binding: ActivityMainBinding
-
+class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
-        binding.buttonCompute.setOnClickListener {
-            val message = if (binding.editTextFactorial.text.isNotEmpty()) {
-                val input = binding.editTextFactorial.text.toString().toLong()
-                val result = try {
-                    FactorialCalculator.computeFactorial(input).toString()
-                } catch (ex: IllegalStateException) {
-                    "Error: ${ex.message}"
-                }
+        // 定位到 QQfile_recv 文件夹
+        val treeUri = "primary%3AAndroid%2Fdata%2Fcom.tencent.mobileqq"
+        val documentUri = "primary%3AAndroid%2Fdata%2Fcom.tencent.mobileqq%2FTencent%2FQQfile_recv"
+        val uriString = "content://com.android.externalstorage.documents/tree/$treeUri/document/$documentUri"
+        val folderUri = Uri.parse(uriString)
 
-                binding.textResult.text = result
-                binding.textResult.visibility = View.VISIBLE
-                getString(R.string.notification_title, result)
-            } else {
-                getString(R.string.please_enter_a_number)
-            }
-            ToastUtil.showToast(this, message)
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(folderUri, "vnd.android.document/directory")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         }
 
-        binding.buttonAppcompose.setOnClickListener {
-            val intent = Intent(it.context, ComposeActivity::class.java)
+        try {
             startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "打开失败：系统限制了原生文件管理器", Toast.LENGTH_LONG).show()
         }
+        // 拉起文件夹后立刻关闭自己
+        finish()
     }
 }
